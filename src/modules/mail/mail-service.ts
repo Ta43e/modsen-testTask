@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { config } from 'dotenv';
 import { ConfigService } from '@nestjs/config';
-config();
+import 'dotenv/config';
 
 @Injectable()
 export class MailService {
   configService = new ConfigService();
-  private sender: string = this.configService.get('SENDER');
-  private pass: string = this.configService.get('PASS_MAIL');
+  private sender: string = process.env.SENDER;
+  private pass: string = process.env.PASS_MAIL;
 
   async sendMail(message: string, rec?: string): Promise<void> {
     const transporter = nodemailer.createTransport({

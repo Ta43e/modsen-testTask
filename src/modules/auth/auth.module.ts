@@ -9,13 +9,15 @@ import { AuthController } from './auth.controller';
 import { UserModule } from '../user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
     imports: [
         PassportModule.register({session: false}),
         UserModule,
+        MailModule,
         JwtModule.register({
-            secret: process.env.PRIVATE_KEY || 'SECRET',
+            secret: 'SECRET',
             signOptions: {
             expiresIn: '24h'
             }

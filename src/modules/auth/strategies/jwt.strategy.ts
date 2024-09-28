@@ -1,44 +1,27 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { User } from 'src/schemas/user.schema';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import * as jwt from 'jsonwebtoken';
 import { Model } from 'mongoose';
+import { User } from 'src/schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
-
-
-export type JwtPayload = {
-  sub: string;
-  email: string;
-};
-
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-  ) {
-    const extractJwtFromCookie = (req) => {
-      let token = null;
-      if (req && req.cookies) {
-        token = req.cookies['access_token'];
-      }
-      return token || ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-    };
+    constructor(@InjectModel(User.name) private userModel: Model<User>,) {
+        super({
+            jwtFromRequest: ExtractJwt.fromExtractors([
+                (req) => {
+                  return req.cookies.jwt;
+                },
+            ]),
+            ignoreExpiration: false,
+            secretOrKey: 'qwer',  
+        });
+    }
 
-    super({
-      ignoreExpiration: false,
-      secretOrKey: process.env.SECRET_JWT,
-      jwtFromRequest: extractJwtFromCookie,
-    });
-  }
-
-  async validate(payload: JwtPayload) {
-    const user = await this.userModel.findOne({ id: payload.sub });
-
-    if (!user) throw new UnauthorizedException('Please log in to continue');
-
-    return {
-      id: payload.sub,
-      email: payload.email,
-    };
-  }
+    async validate(payload: any) {
+      console.log(payload);
+      const user = await this.userModel.findOne({login: payload.login}).exec();
+        return { login: user.login, _id: user._id };
+    }
 }

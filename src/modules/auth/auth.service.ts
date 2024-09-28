@@ -5,7 +5,7 @@ import {
     Res,
     UnauthorizedException,
   } from '@nestjs/common';
-import { Response } from "express";
+  import { Response } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -13,14 +13,15 @@ import { User } from 'src/schemas/user.schema';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { generatePassword } from './utils/generator';
 import { UserService } from '../user/user.service';
-import * as bcrypt from 'bcryptjs';
 import { hashPassword } from './utils/hashPassword';
 import { comparePasswords } from './utils/comparePasswords';
+import { MailService } from '../mail/mail-service';
 
   @Injectable()
   export class AuthService {
     constructor(
      private readonly userService: UserService, 
+     private readonly mailService: MailService, 
       private jwtService: JwtService,
       @InjectModel(User.name) private userModel: Model<User>,
     ) {}
@@ -29,7 +30,6 @@ import { comparePasswords } from './utils/comparePasswords';
       if (!user) throw new BadRequestException('Unauthenticated'); 
      
       const userExists = await this.findUserByLogin(user.login);
-      console.log(userExists)
       if (!userExists) return this.registerUser(user);
       
       if (!comparePasswords(user.password, userExists.password)) throw new UnauthorizedException('Неверный пароль!');
@@ -37,12 +37,11 @@ import { comparePasswords } from './utils/comparePasswords';
       return this.generateToken(user);
     }
     
-    async loginOAuth(userProfile) {
-        const {login} = userProfile
-        let user = await this.findUserByLogin(login);
+    async loginOAuth(user) {
         if (user) return this.generateToken(user);
         const password = await generatePassword();
-        return this.registerUser({login: login, password: password})
+        this.mailService.sendMail(password, user.login);
+        return this.registerUser({login: user.login, password: password})
     }
 
     async registerUser(user: CreateUserDto) {
@@ -74,7 +73,7 @@ import { comparePasswords } from './utils/comparePasswords';
 
     async logout(@Res() res: Response) {
         res.clearCookie('jwt');
-        return res.send({
+        return res.send({ 
             message: 'Logged out successfully',
         });
     }

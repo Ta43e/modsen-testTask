@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Note App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        #notes {
+            margin-top: 20px;
+        }
+
+        .note {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>Note App</h1>
+
+<!-- Форма для регистрации и логина -->
+<form id="authForm">
+    <h2>Login/Register</h2>
+    <label for="login">Login:</label>
+    <input type="text" id="login" name="login" required>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <button type="submit">Submit</button>
+</form>
+
+<div id="authMessage"></div>
+
+<button id="googleAuthBtn">Login with Google</button>
+
+<form id="noteForm" style="display:none;" enctype="multipart/form-data">
+    <h2>Add a new note</h2>
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="content">Content:</label>
+    <textarea id="content" name="content" required></textarea>
+
+    <label for="tags">Tags (comma separated):</label>
+    <input type="text" id="tags" name="tags">
+
+    <label for="image">Image:</label>
+    <input type="file" id="image" name="image">
+
+    <button type="submit">Add Note</button>
+</form>
+
+<h2>Your Notes</h2>
+<div id="notes"></div>
+
+<script>
+    const API_BASE_URL = 'http://localhost:3000/api';
+    let token = '';
+
+    // Форма для авторизации через логин/пароль
+    const authForm = document.getElementById('authForm');
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const login = document.getElementById('login').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ login, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                token = data.accessToken;
+                document.getElementById('authMessage').textContent = 'Login successful!';
+                document.getElementById('noteForm').style.display = 'block';
+                loadNotes();
+            } else {
+                document.getElementById('authMessage').textContent = data.message || 'Login failed';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('authMessage').textContent = 'An error occurred.';
+        }
+    });
+
+    const googleAuthBtn = document.getElementById('googleAuthBtn');
+    googleAuthBtn.addEventListener('click', async () => {
+        try {
+            const googleAuthUrl = `${API_BASE_URL}/auth/google`;
+            const authWindow = window.open(googleAuthUrl, 'GoogleAuth', 'width=600,height=600');
+
+        } catch (error) {
+            console.error('Error during Google login:', error);
+        }
+    });
+
+    const getAddress = async () => {
+        try {
+            const pos = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject);
+            });
+            const latitude = pos.coords.latitude;
+            const longitude = pos.coords.longitude;
+
+            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyASSJzz-yyj69-yLXUZEpLE69PVZ-S7l8E`);
+            return await res.json();
+        } catch (err) {
+            console.error('Error getting location:', err);
+            return null;
+        }
+    };
+
+    const noteForm = document.getElementById('noteForm');
+    noteForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('title').value;
+        const description = document.getElementById('content').value;
+        const tags = document.getElementById('tags').value.split(',').map(tag => tag.trim());
+        const image = document.getElementById('image').files[0];
+
+        const addr = await getAddress();
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('description', description);
+        formData.append('tags', tags);
+        formData.append('location', addr ? addr.results[0].formatted_address + ' ' + new Date().toLocaleString() : '');
+        if (image) {
+            formData.append('file', image);
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/notes`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                document.getElementById('title').value = '';
+                document.getElementById('content').value = '';
+                document.getElementById('tags').value = '';
+                document.getElementById('image').value = '';
+                loadNotes();
+            } else {
+                console.error('Failed to add note');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+
+    async function loadNotes() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/notes`, {
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const notesDiv = document.getElementById('notes');
+            notesDiv.innerHTML = '';
+
+            if (response.ok) {
+                const notes = await response.json();
+
+                notes.forEach(note => {
+                    const noteElement = document.createElement('div');
+                    noteElement.classList.add('note');
+
+                    const tagsHtml = note.tags ? note.tags.map(tag => `<b>${tag}</b>`).join(', ') : '';
+
+                    noteElement.innerHTML = `
+                    <h3>${note.title}</h3>
+                    <p>${note.description}</p>
+                    <i>${tagsHtml}</i>
+                    <i>${note.location ? note.location : ''}</i>
+                    <img src='${note.imgUrl}' width="100" height="100"/>
+                    `;
+                    notesDiv.appendChild(noteElement);
+                });
+            } else {
+                notesDiv.textContent = 'Failed to load notes.';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('notes').textContent = 'An error occurred while loading notes.';
+        }
+    }
+</script>
+</body>
+</html>

@@ -14,7 +14,7 @@ export class NotesService {
         @InjectModel(Note.name) private noteModel: Model<Note>,
         @InjectModel(User.name) private userModel: Model<User>
     ) {}
-    async getNotes(searchNoteDto: SerchNoteDto): Promise<Note[]> {
+    async getNotes(searchNoteDto: SerchNoteDto, owner: ObjectId): Promise<Note[]> {
         const { searchQuery, filter, sortOrder, offset, limit } = searchNoteDto;
         const query: Record<string, any> = {};
         if (searchQuery) {
@@ -35,8 +35,8 @@ export class NotesService {
         }
 
         console.log(query);
-        //query.owner = owner;
-        return this.noteModel
+        query.owner = owner;
+        return this.noteModel 
         .find(query)
         .sort(sort)  
         .skip(offset)
@@ -44,12 +44,14 @@ export class NotesService {
         .exec();                
     }
 
-    async getNote(id: string) {
-        return this.noteModel.findById(id).exec();
+    async getNote(id: string, owner: ObjectId) {
+        const query: Record<string, any> = {};
+        query.owner = owner;
+        query._id = id;
+        return this.noteModel.find(query).exec();
     }
     
-    async createNotes(createNoteDto: CreateNoteDto) {
-        const owner = '615c5eb8e13e4b2f8c32bdf3';
+    async createNotes(createNoteDto: CreateNoteDto, owner: ObjectId) {
         const createNoteObj = {
           ...createNoteDto,
           owner,
@@ -57,12 +59,11 @@ export class NotesService {
         return await this.noteModel.create(createNoteObj);
     }
 
-    async deteleNotes(_id: string) {
-        return await this.noteModel.deleteOne({_id: _id}).exec();
+    async deteleNotes(_id: string, owner: ObjectId) {
+        return this.noteModel.deleteOne({ _id: _id, owner: owner }).exec();
     }
 
-    async updateNotes(id: string, updateNoteDto: UpdateNoteDto) {
-        return this.noteModel.updateOne({_id: id}, updateNoteDto).exec();
-
+    async updateNotes(id: string, updateNoteDto: UpdateNoteDto, owner: ObjectId) {
+        return this.noteModel.updateOne({_id: id, owner: owner}, updateNoteDto).exec();
     }
 }

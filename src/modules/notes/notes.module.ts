@@ -4,11 +4,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Note, NoteSchema } from 'src/schemas/note.schema';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { NotesController } from './notes.controller';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{name: Note.name, schema: NoteSchema}]),
     MongooseModule.forFeature([{name: User.name, schema: UserSchema}]),
+    JwtModule,
   ],
   controllers: [NotesController],
   providers: [NotesService],
