@@ -10,8 +10,10 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 
 @Injectable()
 export class NotesService {
-    constructor(@InjectModel(Note.name) private noteModel: Model<Note>,
-    @InjectModel(User.name) private userModel: Model<User>) {}
+    constructor(
+        @InjectModel(Note.name) private noteModel: Model<Note>,
+        @InjectModel(User.name) private userModel: Model<User>
+    ) {}
     async getNotes(searchNoteDto: SerchNoteDto): Promise<Note[]> {
         const { searchQuery, filter, sortOrder, offset, limit } = searchNoteDto;
         const query: Record<string, any> = {};
