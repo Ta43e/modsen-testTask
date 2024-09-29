@@ -31,9 +31,7 @@ export class FirebaseService {
 async deleteFile(urlImage: string) {
         const storage = getStorage(this.firebaseApp); 
         const filePath = await this.getFilePathFromUrl(urlImage);
-        console.log(filePath);
         const refFile = ref(storage, filePath);
-        console.log(refFile);
         try {
             await getMetadata(refFile);
             await deleteObject(refFile);

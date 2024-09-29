@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
+import { AllExceptionsFilter } from './http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,6 +30,7 @@ async function bootstrap() {
       'access-token',
     )
     .build();
+   app.useGlobalFilters(new AllExceptionsFilter());
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 

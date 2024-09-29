@@ -19,7 +19,6 @@ export class NotesController {
     @UseGuards(JwtAuthGuard)
     @Get()
     async getNotes(@Req() req, @Query() searchNoteDto: SerchNoteDto) {
-        console.log(req.user);
         return this.notesService.getNotes(searchNoteDto, req.user._id);
     }
 
