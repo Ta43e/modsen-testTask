@@ -5,6 +5,7 @@ import { Note, NoteSchema } from 'src/schemas/note.schema';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { NotesController } from './notes.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { FirebaseService } from '../firebase/firebase-service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule,
   ],
   controllers: [NotesController],
-  providers: [NotesService],
-  exports: [NotesService],
+  providers: [NotesService, FirebaseService],
+  exports: [NotesService, FirebaseService],
 })
 export class NotesModule {}

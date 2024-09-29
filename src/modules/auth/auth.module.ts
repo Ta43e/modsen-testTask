@@ -1,7 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./strategies/jwt.strategy";
-import * as process from "process";
 import { GoogleStrategy } from "./strategies/google.strategy";
 import { PassportModule } from "@nestjs/passport";
 import { AuthService } from './auth.service';

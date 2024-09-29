@@ -1,18 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId, Types } from 'mongoose';
-import { retry } from 'rxjs';
 import { Note } from 'src/schemas/note.schema';
 import { User } from 'src/schemas/user.schema';
 import { SerchNoteDto } from './dto/serch-note.dto';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
+import { FirebaseService } from '../firebase/firebase-service';
 
 @Injectable()
 export class NotesService {
     constructor(
         @InjectModel(Note.name) private noteModel: Model<Note>,
-        @InjectModel(User.name) private userModel: Model<User>
+        @InjectModel(User.name) private userModel: Model<User>,
+        private firebaseService: FirebaseService
     ) {}
     async getNotes(searchNoteDto: SerchNoteDto, owner: ObjectId): Promise<Note[]> {
         const { searchQuery, filter, sortOrder, offset, limit } = searchNoteDto;
@@ -34,7 +35,6 @@ export class NotesService {
             sort['topic'] = sortOrder === 'asc' ? 1 : -1;
         }
 
-        console.log(query);
         query.owner = owner;
         return this.noteModel 
         .find(query)
@@ -56,11 +56,17 @@ export class NotesService {
           ...createNoteDto,
           owner,
         };
+        delete createNoteObj.file;
         return await this.noteModel.create(createNoteObj);
     }
 
     async deteleNotes(_id: string, owner: ObjectId) {
-        return this.noteModel.deleteOne({ _id: _id, owner: owner }).exec();
+        const note = await this.noteModel.findOne({_id: _id, owner: owner});
+        if (note) {
+            this.firebaseService.deleteFile(note.imgUrl);
+            return this.noteModel.deleteOne({ _id: _id, owner: owner }).exec();
+        } 
+        throw new NotFoundException(`Note with id ${_id} not found`);
     }
 
     async updateNotes(id: string, updateNoteDto: UpdateNoteDto, owner: ObjectId) {
