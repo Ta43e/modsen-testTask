@@ -41,13 +41,4 @@ export class UpdateNoteDto {
   @IsString()
   @IsOptional()
   location?: string;
-
-  @ApiProperty({
-    example: 'https://example.com/photo.jpg',
-    description: 'URL of an image attached to the note',
-    required: false,
-  })
-  @IsUrl()
-  @IsOptional()
-  imgUrl?: string;
 }

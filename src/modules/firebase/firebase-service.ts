@@ -6,19 +6,19 @@ export class FirebaseService {
   private firebaseApp: FirebaseApp;
   constructor() {
     const firebaseConfig = {
-      apiKey: "AIzaSyAZcircYzrZXd464WBxKPW_qPa52jupLCM",
-      authDomain: "modson-7edf7.firebaseapp.com",
-      projectId: "modson-7edf7",
-      storageBucket: "modson-7edf7.appspot.com",
-      messagingSenderId: "748173922127",
-      appId: "1:748173922127:web:bdf7d02c438c0c03d17f3a"
+      apiKey: process.env.APIKEY,
+      authDomain: process.env.AUTHDOMAIN,
+      projectId: process.env.PROJECTID, 
+      storageBucket: process.env.STORAGEBUCKET, 
+      messagingSenderId: process.env.SENDERID,
+      appId: process.env.APPID 
     };
 
     this.firebaseApp = initializeApp(firebaseConfig);
 
   }
 
-  async uploudFile(@UploadedFile() file): Promise<string> {
+  async uploudFile(@UploadedFile() file): Promise<string> { 
     const storage = getStorage(this.firebaseApp); 
     const uniqueFileName = `${Date.now()}_${file.originalname}`;
     const storageRef = ref(storage, `uploads/${uniqueFileName}`);
