@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  main:
+    container_name: backend
+    build:
+      context: ./
+      dockerfile: ./DockerFile
+    env_file:
+      - .env
+    volumes:
+      - .:/backend
+      - /backend/node_modules
+    ports:
+      - "3000:3000"
