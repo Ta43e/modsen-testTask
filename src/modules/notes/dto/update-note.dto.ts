@@ -1,5 +1,9 @@
-
-import { IsString, IsOptional, IsArray, IsNotEmpty, IsUrl, IsMongoId } from '@nestjs/class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from '@nestjs/class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateNoteDto {
@@ -31,7 +35,7 @@ export class UpdateNoteDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  tags?: string[] = [];  
+  tags?: string[] = [];
 
   @ApiProperty({
     example: 'Беларусь',

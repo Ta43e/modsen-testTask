@@ -1,20 +1,24 @@
 import { Module } from '@nestjs/common';
-import { NotesService } from './notes.service';
+import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Note, NoteSchema } from 'src/schemas/note.schema';
+import { Tag, TagSchema } from 'src/schemas/tag.schema';
 import { User, UserSchema } from 'src/schemas/user.schema';
-import { NotesController } from './notes.controller';
-import { JwtModule } from '@nestjs/jwt';
+
 import { FirebaseService } from '../firebase/firebase-service';
+import { TagService } from '../tag/tag.service';
+import { NotesController } from './notes.controller';
+import { NotesService } from './notes.service';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{name: Note.name, schema: NoteSchema}]),
-    MongooseModule.forFeature([{name: User.name, schema: UserSchema}]),
+    MongooseModule.forFeature([{ name: Note.name, schema: NoteSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: Tag.name, schema: TagSchema }]),
     JwtModule,
   ],
   controllers: [NotesController],
-  providers: [NotesService, FirebaseService],
+  providers: [NotesService, FirebaseService, TagService],
   exports: [NotesService, FirebaseService],
 })
 export class NotesModule {}

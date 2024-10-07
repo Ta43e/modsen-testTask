@@ -1,18 +1,18 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import * as dotenv from 'dotenv';
+
+import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-
   app.use(cookieParser());
   dotenv.config();
   app.enableCors({
-    origin: '*', 
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -22,20 +22,18 @@ async function bootstrap() {
     .setDescription('note assignment')
     .setVersion('1.0')
     .addBearerAuth(
-      { 
-        type: 'http', 
-        scheme: 'bearer', 
-        bearerFormat: 'JWT' 
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
       },
       'access-token',
     )
     .build();
-   app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
 }
 bootstrap();
-
-
