@@ -26,7 +26,7 @@ export class SerchNoteDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  tags?: string[] = [];
+  tags: string[] = [];
 
   @ApiProperty({ default: 'asc', required: false })
   @IsOptional()

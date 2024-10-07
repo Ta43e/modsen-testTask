@@ -53,7 +53,7 @@ export class AuthController {
       await this.authService.signIn(dto);
     res.cookie('jwt', tokens.accessToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       maxAge: 3600000,
     });
     res.send(tokens);

@@ -8,7 +8,6 @@ import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
     ConfigModule.forRoot({
       envFilePath: `.env`,
     }),

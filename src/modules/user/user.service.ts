@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Note } from 'src/schemas/note.schema';
@@ -18,6 +22,15 @@ export class UserService {
   }
 
   async getUser(login: string) {
-    return this.userModel.find({ login }).exec();
+    if (!login) {
+      throw new BadRequestException('Login must be provided.');
+    }
+    const user = await this.userModel.findOne({ login }).exec();
+
+    if (!user) {
+      throw new NotFoundException(`User with login "${login}" not found.`);
+    }
+
+    return user;
   }
 }

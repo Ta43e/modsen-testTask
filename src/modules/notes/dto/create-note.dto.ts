@@ -25,12 +25,13 @@ export class CreateNoteDto {
   description: string;
 
   @ApiProperty({
-    default: ['test1, teest2'],
+    example: ['tag1', 'tag2'],
+    description: 'Tags for categorizing the note',
     isArray: true,
     required: false,
+    default: ['tag1', 'tag2'],
   })
   @IsArray()
-  @IsString({ each: true })
   @IsOptional()
   tags?: string[] = [];
 
@@ -43,8 +44,7 @@ export class CreateNoteDto {
   location?: string;
 
   @ApiProperty({
-    default:
-      'https://sun23-1.userapi.com/s/v1/ig2/VwkVNBMJZxsT7R6aMbOEiVNkIPik2WNweY1NTZV2GjuLGmc_mFqi0ckKlUR5zeD_4kNLYOc2viCmMA3evq5X0pFz.jpg?quality=96&crop=349,97,1168,1168&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080&ava=1&cs=50x50',
+    default: 'https://example.com/image.jpg',
     required: false,
   })
   @IsUrl()

@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId, Types } from 'mongoose';
 import { Note } from 'src/schemas/note.schema';
 import { Tag } from 'src/schemas/tag.schema';
-import { User } from 'src/schemas/user.schema';
 
 import { FirebaseService } from '../firebase/firebase-service';
 import { TagService } from '../tag/tag.service';
@@ -15,7 +14,6 @@ import { UpdateNoteDto } from './dto/update-note.dto';
 export class NotesService {
   constructor(
     @InjectModel(Note.name) private noteModel: Model<Note>,
-    @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Tag.name) private tagModel: Model<Tag>,
     private firebaseService: FirebaseService,
     private tagService: TagService,
@@ -25,34 +23,37 @@ export class NotesService {
     owner: ObjectId,
   ): Promise<Note[]> {
     const { searchQuery, tags, sortOrder, offset, limit } = searchNoteDto;
-    const textConditions = searchQuery
-      ? {
-          $or: [
-            { topic: new RegExp(searchQuery, 'i') },
-            { description: new RegExp(searchQuery, 'i') },
-          ],
-        }
-      : {};
 
+    const conditions: Record<string, any>[] = [];
+
+    if (searchQuery) {
+      conditions.push({
+        $or: [
+          { topic: new RegExp(searchQuery, 'i') },
+          { description: new RegExp(searchQuery, 'i') },
+        ],
+      });
+    }
     const tagIds =
       tags && tags.length
         ? await this.tagModel
-            .find({ keyword: { $in: tags.map((tag) => new RegExp(tag, 'i')) } })
+            .find({
+              keyword: { $in: tags.map((tag) => new RegExp(tag, 'i')) },
+            })
             .select('keyword')
             .exec()
         : [];
 
-    const tagConditions = tagIds.length ? { tags: { $in: tagIds } } : {};
+    if (tagIds.length > 0) {
+      conditions.push({ tags: { $in: tagIds } });
+    }
 
     const query = {
       owner,
-      $and: [textConditions, tagConditions].filter(
-        (condition) => Object.keys(condition).length > 0,
-      ),
+      ...(conditions.length > 0 ? { $and: conditions } : {}),
     };
 
     const sort: { [key: string]: 1 | -1 } = {};
-
     if (sortOrder) {
       sort['topic'] = sortOrder === 'asc' ? 1 : -1;
     }
@@ -74,13 +75,11 @@ export class NotesService {
 
   async createNotes(createNoteDto: CreateNoteDto, owner: ObjectId) {
     const { tags, ...noteData } = createNoteDto;
-
     const tagIds: Types.ObjectId[] =
       await this.tagService.findOrCreateTags(tags);
-
     const createNoteObj = {
       ...noteData,
-      tagIds,
+      tags: tagIds,
       owner,
     };
     delete createNoteObj.file;

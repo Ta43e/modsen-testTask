@@ -19,6 +19,6 @@ import { NotesService } from './notes.service';
   ],
   controllers: [NotesController],
   providers: [NotesService, FirebaseService, TagService],
-  exports: [NotesService, FirebaseService],
+  exports: [NotesService, FirebaseService, TagService],
 })
 export class NotesModule {}

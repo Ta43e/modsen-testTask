@@ -25,6 +25,7 @@ import {
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FirebaseService } from '../firebase/firebase-service';
+import { TagService } from '../tag/tag.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { SerchNoteDto } from './dto/serch-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
@@ -36,6 +37,7 @@ export class NotesController {
   constructor(
     private notesService: NotesService,
     private firebaseService: FirebaseService,
+    private tagService: TagService,
   ) {}
 
   @ApiOperation({ summary: 'Get list of notes' })
@@ -51,6 +53,10 @@ export class NotesController {
   @UseGuards(JwtAuthGuard)
   @Get()
   async getNotes(@Req() req, @Query() searchNoteDto: SerchNoteDto) {
+    const { tags } = searchNoteDto;
+    if (typeof tags === 'string') {
+      searchNoteDto.tags = [tags];
+    }
     return this.notesService.getNotes(searchNoteDto, req.user._id);
   }
 
@@ -82,6 +88,7 @@ export class NotesController {
     if (file) {
       createNoteDto.imgUrl = await this.firebaseService.uploudFile(file);
     }
+
     return this.notesService.createNotes(createNoteDto, req.user._id);
   }
 

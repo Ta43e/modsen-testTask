@@ -17,7 +17,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UserModule,
     MailModule,
     JwtModule.register({
-      secret: 'SECRET',
+      secret: process.env.SERCET,
       signOptions: {
         expiresIn: '24h',
       },

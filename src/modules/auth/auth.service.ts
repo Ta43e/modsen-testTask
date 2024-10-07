@@ -15,6 +15,7 @@ import { MailService } from '../mail/mail-service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { UserService } from '../user/user.service';
 import { comparePasswords } from './utils/comparePasswords';
+import { generateToken } from './utils/generateoken';
 import { generatePassword } from './utils/generator';
 import { hashPassword } from './utils/hashPassword';
 
@@ -34,13 +35,13 @@ export class AuthService {
     if (!userExists) return this.registerUser(user);
 
     if (!comparePasswords(user.password, userExists.password))
-      throw new UnauthorizedException('Неверный пароль!');
+      throw new UnauthorizedException('Wrong password!');
 
-    return this.generateToken(user);
+    return generateToken(user);
   }
 
   async loginOAuth(user) {
-    if (user) return this.generateToken(user);
+    if (user) return generateToken(user);
     const password = await generatePassword();
     this.mailService.sendMail(password, user.login);
     return this.registerUser({ login: user.login, password: password });
@@ -50,9 +51,9 @@ export class AuthService {
     try {
       user.password = await hashPassword(user.password);
       const newUser = await this.userService.createUser(user);
-      return this.generateToken(newUser);
+      return generateToken(newUser);
     } catch {
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException('Error during registration');
     }
   }
 
@@ -63,23 +64,6 @@ export class AuthService {
     }
     return user;
   }
-
-  private async generateToken(user) {
-    const payload = { login: user.login, _id: user._id };
-    const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.ACCESS_SERCET,
-      expiresIn: '1h',
-    });
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.REFRESH_SECRET,
-      expiresIn: '1d',
-    });
-    return {
-      accessToken,
-      refreshToken,
-    };
-  }
-
   async logout(@Res() res: Response) {
     res.clearCookie('jwt');
     return res.send({

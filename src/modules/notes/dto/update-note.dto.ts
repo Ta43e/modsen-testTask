@@ -35,7 +35,7 @@ export class UpdateNoteDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  tags?: string[] = [];
+  tags?: string[];
 
   @ApiProperty({
     example: 'Беларусь',
